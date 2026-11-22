@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 匯率指數走勢追蹤網站（CFETS / DXY / USD-TWD）</title>
+  <script src="https://jsdelivr.net"></script>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --cfets-color: #1d4ed8;
+      --dxy-color: #d97706;
+      --twd-color: #15803d;
+      --primary-btn: #0f172a;
+    }
+    * { box-sizing: border-box; font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background-color: var(--bg-color); color: var(--text-main); line-height: 1.5; }
+    nav { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    nav .brand { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    nav .status { font-size: 0.85rem; background: #1e293b; padding: 5px 12px; border-radius: 999px; color: #38bdf8; border: 1px solid #334155; }
+    .container { max-width: 1140px; margin: 24px auto; padding: 0 16px; }
+    .schedule-banner { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-size: 0.9rem; }
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; color: var(--text-muted); font-weight: 600; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .card-pct { font-size: 2rem; font-weight: 800; margin: 10px 0 4px; }
+    .card-detail { font-size: 0.86rem; color: var(--text-muted); }
+    .chart-section { background: var(--card-bg); border-radius: 12px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 24px; }
+    .section-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { background: var(--primary-btn); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: 0.15s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: #fff; color: var(--text-main); border: 1px solid #cbd5e1; }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 4px 8px; font-size: 0.78rem; border-radius: 6px; cursor: pointer; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: end; margin-top: 12px; }
+    .form-group label { display: block; font-size: 0.84rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; }
+    .form-group input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .base-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
+    .table-wrapper { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+    th { background: #f8fafc; font-weight: 600; color: #475569; }
+    tr:hover { background: #f8fafc; }
+    footer { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding: 24px 0 40px; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="brand">📈 2026 全球匯率指數走勢追蹤站</div>
+    <div class="status" id="navUpdated">最新更新：2026/11/22</div>
+  </nav>
+
+  <div class="container">
+    <div class="schedule-banner">
+      <div><strong>⏰ 固定追蹤排程（含週末）：</strong>每日 08:45、11:35、14:35、21:15</div>
+      <div>✨ 輸入最新「指數點位 / 匯率」，系統將自動依 2025 年底基準換算累計漲幅並重繪折線圖</div>
+    </div>
+
+    <div class="grid-cards">
+      <div class="card">
+        <div class="card-header">
+          <span><span class="dot" style="background: var(--cfets-color);"></span>CFETS 人民幣匯率指數</span>
+          <span>基準：97.99</span>
+        </div>
+        <div class="card-pct" style="color: var(--cfets-color);" id="card-cfets-pct">+7.14%</div>
+        <div class="card-detail">最新點位：<strong id="card-cfets-val">104.99</strong>（創逾四年半新高）</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span><span class="dot" style="background: var(--dxy-color);"></span>美元指數（DXY）</span>
+          <span>基準：98.41</span>
+        </div>
+        <div class="card-pct" style="color: var(--dxy-color);" id="card-dxy-pct">+5.53%</div>
+        <div class="card-detail">最新點位：<strong id="card-dxy-val">103.85</strong>（波段高 103.97 / +5.66%）</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span><span class="dot" style="background: var(--twd-color);"></span>美元兌新台幣（USD/TWD）</span>
+          <span>基準：31.20</span>
+        </div>
+        <div class="card-pct" style="color: var(--twd-color);" id="card-twd-pct">+5.48%</div>
+        <div class="card-detail">最新報價：<strong id="card-twd-val">32.91</strong>（逼近 33 元整數關卡）</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="section-top">
+        <h2 class="section-title">2026 年以來累計漲幅走勢比較折線圖（%）</h2>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="resetToDefault()">重設回預設數據</button>
+          <button class="btn" onclick="downloadJPG()">📥 下載最新折線圖 (JPG)</button>
+        </div>
+      </div>
+      <div style="position: relative; height: 420px; width: 100%;">
+        <canvas id="fxChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 class="section-title">➕ 記錄最新時段報價（自動換算 2026 累計漲幅）</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>日期與時段標籤</label>
+          <input type="text" id="inDate" placeholder="例：11/23 08:45" />
+        </div>
+        <div class="form-group">
+          <label>CFETS 最新點位</label>
+          <input type="number" step="0.01" id="inCfets" placeholder="例：105.05" />
+        </div>
+        <div class="form-group">
+          <label>美元指數 DXY 點位</label>
+          <input type="number" step="0.01" id="inDxy" placeholder="例：103.92" />
+        </div>
+        <div class="form-group">
+          <label>USD/TWD 最新匯率</label>
+          <input type="number" step="0.001" id="inTwd" placeholder="例：32.95" />
+        </div>
+        <div class="form-group">
+          <button class="btn" style="width: 100%; height: 40px;" onclick="addRecord()">新增並更新圖表</button>
+        </div>
+      </div>
+      <div class="base-note">* 換算基準（2025/12/31 收盤）：CFETS = 97.99、DXY = 98.41、USD/TWD = 31.200。所有資料自動儲存在您的瀏覽器本機中。</div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">📋 歷史追蹤數據明細</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>日期 / 時段</th>
+              <th>CFETS 點位（累計漲幅）</th>
+              <th>DXY 點位（累計漲幅）</th>
+              <th>USD/TWD 報價（累計漲幅）</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      資料來源：中國外匯交易中心（CFETS）、ICE 美元指數、台北外匯經紀公司｜2026 匯率追蹤網站
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'fxWebsiteRecords2026_v3';
+    const BASE = { cfets: 97.99, dxy: 98.41, twd: 31.20 };
+
+    const defaultRecords = [
+      { date: '12/31', cfetsVal: 97.99, dxyVal: 98.41, twdVal: 31.20 },
+      { date: '03/31', cfetsVal: 100.93, dxyVal: 99.69, twdVal: 31.77 },
+      { date: '06/30', cfetsVal: 102.61, dxyVal: 101.26, twdVal: 31.47 },
+      { date: '09/30', cfetsVal: 103.23, dxyVal: 101.51, twdVal: 31.66 },
+      { date: '10/30', cfetsVal: 103.68, dxyVal: 102.00, twdVal: 32.30 },
+      { date: '11/19 (波段高)', cfetsVal: 104.99, dxyVal: 103.97, twdVal: 32.85 },
+      { date: '11/22', cfetsVal: 104.99, dxyVal: 103.85, twdVal: 32.91 }
+    ];
+
+    let records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(defaultRecords));
+
+    function calcPct(val, base) {
+      return Number((((val - base) / base) * 100).toFixed(2));
+    }
+
+    const whiteBgPlugin = {
+      id: 'whiteBgPlugin',
+      beforeDraw: function(chart) {
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, chart.width, chart.height);
+        ctx.restore();
+      }
+    };
+
+    const ctx = document.getElementById('fxChart').getContext('2d');
+    const fxChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: new Array(),
+        datasets: [
+          {
+            label: 'CFETS 人民幣匯率指數 (%)',
+            data: new Array(),
+            borderColor: '#1d4ed8',
+            backgroundColor: '#1d4ed8',
+            borderWidth: 3,
+            pointRadius: 5,
+            tension: 0.15
+          },
+          {
+            label: '美元指數 DXY (%)',
+            data: new Array(),
+            borderColor: '#d97706',
+            backgroundColor: '#d97706',
+            borderWidth: 3,
+            pointRadius: 5,
+            tension: 0.15
+          },
+          {
+label: '美元兌新台幣 USD/TWD (%)',
+data: new Array(),
+borderColor: '#15803d',
+backgroundColor: '#15803d',
+borderWidth: 3,
+pointRadius: 5,
+tension: 0.15
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+interaction: { mode: 'index', intersect: false },
+plugins: {
+legend: { position: 'top', labels: { font: { size: 13, weight: 'bold' } } },
+tooltip: {
+callbacks: {
+label: function(ctx) {
+const idx = ctx.dataIndex;
+const rec = records[idx];
+const rawVal = ctx.datasetIndex === 0 ? rec.cfetsVal : (ctx.datasetIndex === 1 ? rec.dxyVal : rec.twdVal);
+const sign = ctx.parsed.y >= 0 ? '+' : '';
+return ctx.dataset.label.split(' ')[0] + ': ' + sign + ctx.parsed.y.toFixed(2) + '% (報價: ' + rawVal + ')';
+}
+}
+}
+},
+scales: {
+y: {
+beginAtZero: true,
+suggestedMax: 8,
+ticks: { callback: function(v) { return v + '%'; } },
+title: { display: true, text: '今年以來累計漲幅 (%)' }
+},
+x: {
+title: { display: true, text: '日期 / 時段 (2026年)' }
+}
+}
+},
+plugins: [whiteBgPlugin]
+});
+function formatPct(pct) {
+return (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+}
+function renderAll() {
+const labels = records.map(function(r) { return r.date; });
+const cfetsPcts = records.map(function(r) { return calcPct(r.cfetsVal, BASE.cfets); });
+const dxyPcts = records.map(function(r) { return calcPct(r.dxyVal, BASE.dxy); });
+const twdPcts = records.map(function(r) { return calcPct(r.twdVal, BASE.twd); });
+fxChart.data.labels = labels;
+fxChart.data.datasets[0].data = cfetsPcts;
+fxChart.data.datasets[1].data = dxyPcts;
+fxChart.data.datasets[2].data = twdPcts;
+fxChart.update();
+const last = records[records.length - 1];
+const lastCfetsPct = cfetsPcts[cfetsPcts.length - 1];
+const lastDxyPct = dxyPcts[dxyPcts.length - 1];
+const lastTwdPct = twdPcts[twdPcts.length - 1];
+document.getElementById('navUpdated').innerText = '最新更新：2026/' + last.date;
+document.getElementById('card-cfets-pct').innerText = formatPct(lastCfetsPct);
+document.getElementById('card-cfets-val').innerText = last.cfetsVal.toFixed(2);
+document.getElementById('card-dxy-pct').innerText = formatPct(lastDxyPct);
+document.getElementById('card-dxy-val').innerText = last.dxyVal.toFixed(2);
+document.getElementById('card-twd-pct').innerText = formatPct(lastTwdPct);
+document.getElementById('card-twd-val').innerText = last.twdVal.toFixed(2);
+const tbody = document.getElementById('historyTableBody');
+tbody.innerHTML = '';
+for (let i = records.length - 1; i >= 0; i--) {
+const r = records[i];
+const tr = document.createElement('tr');
+const tdDate = document.createElement('td');
+tdDate.innerHTML = '' + r.date + '';
+const tdCfets = document.createElement('td');
+tdCfets.style.color = 'var(--cfets-color)';
+tdCfets.innerText = r.cfetsVal.toFixed(2) + '（' + formatPct(cfetsPcts[i]) + '）';
+const tdDxy = document.createElement('td');
+tdDxy.style.color = 'var(--dxy-color)';
+tdDxy.innerText = r.dxyVal.toFixed(2) + '（' + formatPct(dxyPcts[i]) + '）';
+const tdTwd = document.createElement('td');
+tdTwd.style.color = 'var(--twd-color)';
+tdTwd.innerText = r.twdVal.toFixed(2) + '（' + formatPct(twdPcts[i]) + '）';
+const tdAction = document.createElement('td');
+if (i === 0) {
+tdAction.innerHTML = '基準日';
+} else {
+const delBtn = document.createElement('button');
+delBtn.className = 'btn btn-danger';
+delBtn.innerText = '刪除';
+delBtn.onclick = function() { deleteRecord(i); };
+tdAction.appendChild(delBtn);
+}
+tr.appendChild(tdDate);
+tr.appendChild(tdCfets);
+tr.appendChild(tdDxy);
+tr.appendChild(tdTwd);
+tr.appendChild(tdAction);
+tbody.appendChild(tr);
+}
+}
+function addRecord() {
+const dateStr = document.getElementById('inDate').value.trim();
+const cVal = parseFloat(document.getElementById('inCfets').value);
+const dVal = parseFloat(document.getElementById('inDxy').value);
+const tVal = parseFloat(document.getElementById('inTwd').value);
+if (!dateStr || isNaN(cVal) || isNaN(dVal) || isNaN(tVal)) {
+alert('請完整填寫日期與三個指數的最新點位！');
+return;
+}
+records.push({ date: dateStr, cfetsVal: cVal, dxyVal: dVal, twdVal: tVal });
+localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+renderAll();
+document.getElementById('inDate').value = '';
+document.getElementById('inCfets').value = '';
+document.getElementById('inDxy').value = '';
+document.getElementById('inTwd').value = '';
+}
+function deleteRecord(index) {
+if (confirm('確定要刪除「' + records[index].date + '」這筆紀錄嗎？')) {
+records.splice(index, 1);
+localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+renderAll();
+}
+}
+function resetToDefault() {
+if (confirm('確定要重設回預設的 2026/11/22 數據嗎？')) {
+records = JSON.parse(JSON.stringify(defaultRecords));
+localStorage.removeItem(STORAGE_KEY);
+renderAll();
+}
+}
+function downloadJPG() {
+const link = document.createElement('a');
+const lastLabel = records[records.length - 1].date.replace(/[/\s:()（）]/g, '');
+link.download = '2026匯率走勢比較圖_' + lastLabel + '.jpg';
+link.href = fxChart.toBase64Image('image/jpeg', 0.95);
+link.click();
+}
+renderAll();
